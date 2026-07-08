@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: visipass_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - visipass_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: visipass_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/visitor_db
+      - JWT_SECRET=supersecretjwtkeyforvisitorpassmanagementsystem
+      - FRONTEND_URL=http://localhost
+    depends_on:
+      - mongodb
+    networks:
+      - visipass_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: visipass_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - visipass_network
+
+volumes:
+  mongo_data:
+
+networks:
+  visipass_network:
+    driver: bridge
